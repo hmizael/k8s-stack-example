@@ -14,7 +14,7 @@ spec:
     - www.trimtech.com.br
     secretName: www.trimtech.com.br-tls
   rules:
-    - host: wwww.trimtech.com.br
+    - host: www.trimtech.com.br
       http:
         paths:
           - path: /
