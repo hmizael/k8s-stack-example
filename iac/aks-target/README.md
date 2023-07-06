@@ -16,7 +16,6 @@
 | Name | Type |
 |------|------|
 | [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/3.63.0/docs/resources/kubernetes_cluster) | resource |
-| [azurerm_kubernetes_cluster_node_pool.node_pools](https://registry.terraform.io/providers/hashicorp/azurerm/3.63.0/docs/resources/kubernetes_cluster_node_pool) | resource |
 | [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/3.63.0/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.snet](https://registry.terraform.io/providers/hashicorp/azurerm/3.63.0/docs/data-sources/subnet) | data source |
 
@@ -34,5 +33,4 @@
 | <a name="input_resource_group"></a> [resource\_group](#input\_resource\_group) | Resource Group to AKS resources | `string` | `"rg-target"` | no |
 | <a name="input_system_node_pool_config"></a> [system\_node\_pool\_config](#input\_system\_node\_pool\_config) | Node count for AKS System NodePool (default=1); Enabling this option will taint default node pool with CriticalAddonsOnly=true:NoSchedule taint | `map(any)` | <pre>{<br>  "node_count": 1,<br>  "only_critical_addons_enabled": false,<br>  "vm_size": "Standard_D8as_v5"<br>}</pre> | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags for all resources | `map` | <pre>{<br>  "env": "hub",<br>  "project": "k8s-stack-example",<br>  "region": "east_us",<br>  "short_region": "eu",<br>  "terraform": true,<br>  "tier": "container"<br>}</pre> | no |
-| <a name="input_user_node_pools"></a> [user\_node\_pools](#input\_user\_node\_pools) | n/a | `map` | `{}` | no |
 <!-- END_TF_DOCS -->
