@@ -1,0 +1,116 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Tag
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/minversion: 1.6.0
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      The ':latest' tag is mutable and can lead to unexpected errors if the
+      image changes. A best practice is to use an immutable tag that maps to
+      a specific version of an application Pod. This policy validates that the image
+      specifies a tag and that it is not called `latest`.
+    pod-policies.kyverno.io/autogen-controllers: none
+spec:
+  validationFailureAction: audit
+  background: true
+  rules:
+  - name: require-image-tag
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - armo-system
+          - calico-system
+          - castai-agent
+          - cattle-fleet-system
+          - cattle-impersonation-system
+          - cattle-system
+          - cert-manager
+          - external-dns
+          - external-secrets
+          - fleet-system
+          - flux-system
+          - ingress-internal
+          - ingress-external
+          - ingress-nginx-internal
+          - ingress-nginx-external
+          - keda
+          - kong
+          - konga
+          - kube-node-lease
+          - kube-public
+          - kube-system
+          - kubecost
+          - kyverno
+          - monitoring
+          - monitoring-prometheus
+          - policy-reporter
+          - tigera-operator
+    preconditions:
+      all:
+        - key: Job
+          operator: AnyNotIn
+          value: "{{ request.object.metadata.ownerReferences[].kind }}"
+    validate:
+      message: "An image tag is required."
+      pattern:
+        spec:
+          containers:
+          - image: "*:*"
+  - name: validate-image-tag
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - armo-system
+          - calico-system
+          - castai-agent
+          - cattle-fleet-system
+          - cattle-impersonation-system
+          - cattle-system
+          - cert-manager
+          - external-dns
+          - external-secrets
+          - fleet-system
+          - flux-system
+          - ingress-internal
+          - ingress-external
+          - ingress-nginx-internal
+          - ingress-nginx-external
+          - keda
+          - kong
+          - konga
+          - kube-node-lease
+          - kube-public
+          - kube-system
+          - kubecost
+          - kyverno
+          - monitoring
+          - monitoring-prometheus
+          - policy-reporter
+          - tigera-operator
+    preconditions:
+      all:
+        - key: Job
+          operator: AnyNotIn
+          value: "{{ request.object.metadata.ownerReferences[].kind }}"
+    validate:
+      message: "Using a mutable image tag e.g. 'latest' is not allowed."
+      pattern:
+        spec:
+          containers:
+          - image: "!*:latest"

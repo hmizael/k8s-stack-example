@@ -1,0 +1,18 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: argocd-config
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: AppProject utilizado para os armazenar as configurações do ArgoCD.
+  sourceRepos:
+    - 'https://github.com/hmizael/k8s-stack-example.git'
+  destinations:
+    - name: 'in-cluster'
+      namespace: 'argocd'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

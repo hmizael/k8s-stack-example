@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: apps-hub-main
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: apps-hub
+  source:
+    repoURL: https://github.com/hmizael/k8s-stack-example.git
+    targetRevision: main
+    path: gitops/apps/hub
+    directory:
+      directory:
+      recurse: false
+      include: '*.yaml'
+  destination:
+    name: in-cluster
+    namespace: argocd
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true

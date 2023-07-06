@@ -1,0 +1,23 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: game-2048-apps-target
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: apps-target
+  source:
+    repoURL: https://github.com/hmizael/k8s-stack-example.git
+    targetRevision: main
+    path: gitops/apps/target/game-2048
+    directory:
+      recurse: false
+      include: '*.yaml'
+  destination:
+    name: aks-target
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true

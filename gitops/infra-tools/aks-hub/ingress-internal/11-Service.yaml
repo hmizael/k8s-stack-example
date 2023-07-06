@@ -1,0 +1,62 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: internal-ingress-nginx-controller
+  namespace: ingress-nginx-internal
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: internal
+    app.kubernetes.io/version: 1.7.1
+    app.kubernetes.io/component: controller
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/healthz"
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+      appProtocol: http
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: https
+      appProtocol: https
+    - name: 5044-tcp
+      protocol: TCP
+      port: 5044
+      targetPort: 5044-tcp
+    - name: 9200-tcp
+      port: 9200
+      protocol: TCP
+      targetPort: 9200-tcp
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: internal
+    app.kubernetes.io/component: controller
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: internal-ingress-nginx-controller-admission
+  namespace: ingress-nginx-internal
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: internal
+    app.kubernetes.io/version: 1.7.1
+    app.kubernetes.io/component: controller
+spec:
+  type: ClusterIP
+  ports:
+    - name: https-webhook
+      port: 443
+      targetPort: webhook
+      appProtocol: https
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: internal
+    app.kubernetes.io/component: controller

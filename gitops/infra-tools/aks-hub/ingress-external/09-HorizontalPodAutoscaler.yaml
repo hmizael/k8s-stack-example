@@ -1,0 +1,31 @@
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: external-ingress-nginx-controller
+  namespace: ingress-nginx-external
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: external
+    app.kubernetes.io/version: 1.7.1
+    app.kubernetes.io/component: controller
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: external-ingress-nginx-controller
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80

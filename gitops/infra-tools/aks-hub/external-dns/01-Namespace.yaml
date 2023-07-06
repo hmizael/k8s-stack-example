@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-dns
+  labels:
+    app.kubernetes.io/name: external-dns
+    app.kubernetes.io/version: 0.13.2
+    app: external-dns
+    gitops: argocd
+    project: infra-tools
+    squad: cloud-platform
+    tier: app

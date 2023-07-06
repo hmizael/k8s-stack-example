@@ -1,0 +1,41 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: external-ingress-nginx
+  namespace: ingress-nginx-external
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: external
+    app.kubernetes.io/version: 1.7.1
+    app.kubernetes.io/component: controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: external-ingress-nginx
+subjects:
+  - kind: ServiceAccount
+    name: external-ingress-nginx
+    namespace: ingress-nginx-external
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: external-ingress-nginx-admission
+  namespace: ingress-nginx-external
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: external
+    app.kubernetes.io/version: 1.7.1
+    app.kubernetes.io/component: admission-webhook
+  annotations:
+    argocd.argoproj.io/hook: PreSync,PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: external-ingress-nginx-admission
+subjects:
+  - kind: ServiceAccount
+    name: external-ingress-nginx-admission
+    namespace: "ingress-nginx-external"

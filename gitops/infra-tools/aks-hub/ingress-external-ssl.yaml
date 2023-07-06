@@ -1,0 +1,30 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-external-sslpass-infra-tools-aks-hub
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra-tools
+  sources:
+    - repoURL: https://github.com/hmizael/k8s-stack-example.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://kubernetes.github.io/ingress-nginx
+      targetRevision: 4.5.2
+      chart: ingress-nginx
+      helm:
+        releaseName: internal-sslpass
+        valueFiles:
+        - $values/gitops/infra-tools/aks-hub/ingress-external-sslpass/values.yaml
+  destination:
+    name: in-cluster
+    namespace: ingress-nginx-internal-sslpass
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true

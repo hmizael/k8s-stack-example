@@ -1,0 +1,29 @@
+formatter: "markdown" # this is required
+
+sections:
+  hide: []
+  show: []
+
+content: ""  
+
+output:
+  file: "README.md"
+
+sort:
+  enabled: true
+  by: name
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: false
+  escape: true
+  hide-empty: true
+  html: true
+  indent: 3
+  lockfile: true
+  read-comments: true
+  required: true
+  sensitive: true
+  type: true

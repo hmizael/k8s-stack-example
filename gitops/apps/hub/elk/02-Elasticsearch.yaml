@@ -1,0 +1,52 @@
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: trimtech
+  namespace: elk
+spec:
+  version: 8.8.2
+  nodeSets:
+  - name: default
+    count: 1
+    config:
+      node.roles:
+        - master
+        - data
+        - ingest
+        - transform
+      xpack.security.authc.api_key.enabled: true
+      http.max_content_length: 300mb
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: default
+    podTemplate:
+      spec:
+        initContainers:
+        - name: sysctl
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          command:
+            - sh
+            - '-c'
+            - sysctl -w vm.max_map_count=262144
+        containers:
+        - name: elasticsearch
+          env:
+          - name: ES_JAVA_OPTS
+            value: -Xms1g -Xmx1g
+          resources:
+            limits:
+              cpu: 1
+              memory: 2Gi
+            requests:
+              cpu: 1
+              memory: 2Gi

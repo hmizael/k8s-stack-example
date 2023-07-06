@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-trimtech
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@trimtech.com.br
+    privateKeySecretRef:
+      name: letsencrypt-trimtech
+    solvers:
+    - dns01:
+        azureDNS:
+          clientID: a39a5ece-5d97-461e-af5f-b75fb427dda2
+          clientSecretSecretRef:
+            name: gitops-service-principal
+            key: client-secret
+          subscriptionID: fe365c25-3fd3-4066-85fa-b75c1efb1589
+          tenantID: 714f355d-4a89-4035-b3de-9ee58294ead0
+          resourceGroupName: rg-dns
+          hostedZoneName: trimtech.com.br
+          environment: AzurePublicCloud
+      selector: {}

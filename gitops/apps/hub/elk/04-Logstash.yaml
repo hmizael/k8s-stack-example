@@ -1,0 +1,225 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-config
+  namespace: elk
+  labels:
+    app.kubernetes.io/name: logstash
+data:
+  logstash.yml: |
+    http.host: 0.0.0.0
+    xpack.monitoring.enabled: true
+    xpack.monitoring.elasticsearch.hosts: [ "https://trimtech-es-http:9200" ]
+    xpack.monitoring.elasticsearch.username: logstash
+    xpack.monitoring.elasticsearch.password: logstashTrimtech
+    xpack.monitoring.elasticsearch.ssl.certificate_authority: /usr/share/logstash/config/certs/ca.crt
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-pipeline
+  namespace: elk
+  labels:
+    app.kubernetes.io/name: logstash
+data:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+        include_codec_tag => false
+      }
+    }
+    filter {
+      if [kubernetes][labels][app_kubernetes_io/name] == "ingress-nginx" {
+        grok {
+          match => { "message" => ["%{IPORHOST:nginx.remote_addr} - %{DATA:nginx.remote_user} \[%{HTTPDATE:nginx.time_local}\] \"%{WORD:nginx.method} %{DATA:nginx.url} HTTP/%{NUMBER:nginx.http_version}\" %{NUMBER:nginx.status} %{NUMBER:nginx.body_bytes_sent} \"%{DATA:nginx.http_referer}\" \"%{DATA:nginx.http_user_agent}\" %{NUMBER:nginx.request_length} %{NUMBER:nginx.request_time} \[%{DATA:nginx.proxy_upstream_name}\] \[%{DATA:nginx.proxy_alternative_upstream_name}\] %{NOTSPACE:nginx.upstream_addr} %{NUMBER:nginx.upstream_response_length} %{NUMBER:nginx.upstream_response_time} %{NUMBER:nginx.upstream_status} %{NOTSPACE:nginx.req_id}"] }
+        }
+      }
+    }
+    output {
+      if [project] {
+        if [kubernetes][deployment][name] {
+          elasticsearch {
+            hosts => ["https://trimtech-es-http:9200"]
+            index => "%{[project]}-%{[kubernetes][deployment][name]}"
+            user => logstash
+            password => logstashTrimtech
+            cacert => "/usr/share/logstash/config/certs/ca.crt"
+            action => "create"
+          }
+        }else{
+          if [kubernetes][daemonset][name] {
+            elasticsearch {
+              hosts => ["https://trimtech-es-http:9200"]
+              index => "%{[project]}-%{[kubernetes][daemonset][name]}"
+              user => logstash
+              password => logstashTrimtech
+              cacert => "/usr/share/logstash/config/certs/ca.crt"
+              action => "create"
+            }
+          }else{
+            if [kubernetes][statefulset][name] {
+              elasticsearch {
+                hosts => ["https://trimtech-es-http:9200"]
+                index => "%{[project]}-%{[kubernetes][statefulset][name]}"
+                user => logstash
+                password => logstashTrimtech
+                cacert => "/usr/share/logstash/config/certs/ca.crt"
+                action => "create"
+              }
+            }else {
+              elasticsearch {
+                hosts => ["https://trimtech-es-http:9200"]
+                index => "%{[project]}-notmapped"
+                user => logstash
+                password => logstashTrimtech
+                cacert => "/usr/share/logstash/config/certs/ca.crt"
+                action => "create"
+              }
+            }
+          }
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: logstash
+  namespace: elk
+  labels:
+    app.kubernetes.io/name: logstash
+spec:
+  podManagementPolicy: Parallel
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: logstash
+  serviceName: logstash-headless
+  template:
+    metadata:
+      name: logstash
+      labels:
+        app.kubernetes.io/name: logstash
+      annotations:
+        configchecksum: ec5e742630f324005b8ff71b0911004958d27dac88742cf9f3fe65139831d31
+        pipelinechecksum: ea39f17b4783b8de13f5331080c8519d0ef02c8c66d7a0b08624a2179aee5f0
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - logstash
+            topologyKey: kubernetes.io/hostname
+      volumes:
+      - name: elastic-certificate-crt
+        secret:
+          secretName: trimtech-es-http-certs-public
+      - name: logstashconfig
+        configMap:
+          name: logstash-config
+      - name: logstashpipeline
+        configMap:
+          name: logstash-pipeline
+      containers:
+      - name: logstash
+        image: docker.elastic.co/logstash/logstash:8.5.1
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        env:
+        - name: LS_JAVA_OPTS
+          value: -Xms1g -Xmx1g
+        ports:
+        - containerPort: 8080
+          name: ingest
+        - containerPort: 9600
+          name: stats
+        - containerPort: 5044
+          name: beats
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: stats
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: stats
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: elastic-certificate-crt
+          mountPath: /usr/share/logstash/config/certs
+        - name: logstashconfig
+          mountPath: /usr/share/logstash/config/logstash.yml
+          subPath: logstash.yml
+        - name: logstashpipeline        
+          mountPath: /usr/share/logstash/pipeline/logstash.conf
+          subPath: logstash.conf
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      terminationGracePeriodSeconds: 120
+  updateStrategy:
+    type: RollingUpdate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+  namespace: elk
+  labels:
+    app.kubernetes.io/name: logstash
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: logstash
+  ports:
+  - name: beats
+    port: 5044
+    protocol: TCP
+    targetPort: 5044
+  - name: stats
+    port: 9600
+    protocol: TCP
+    targetPort: 9600
+  - name: ingest
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash-headless
+  namespace: elk
+  labels:
+    app.kubernetes.io/name: logstash
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: logstash
+  ports:
+  - name: stats
+    port: 9600

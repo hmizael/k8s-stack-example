@@ -1,0 +1,19 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: infra-tools
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: AppProject utilizado para os armazenar os apps de infra.
+  sourceRepos:
+    - 'https://github.com/hmizael/k8s-stack-example.git'
+    - 'https://kubernetes.github.io/ingress-nginx'
+  destinations:
+    - namespace: '*'
+      server: '*'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

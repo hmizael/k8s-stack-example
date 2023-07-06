@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: policy-reporter-kyverno-plugin
+  namespace: policy-reporter
+  labels:
+    app.kubernetes.io/name: kyverno-plugin
+    app.kubernetes.io/instance: policy-reporter
+    app.kubernetes.io/version: "1.5.1"
+    app.kubernetes.io/component: plugin
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: rest
+      protocol: TCP
+      name: rest
+  selector:
+    app.kubernetes.io/name: kyverno-plugin
+    app.kubernetes.io/instance: policy-reporter
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: policy-reporter
+  namespace: policy-reporter
+  labels:
+    app.kubernetes.io/name: policy-reporter
+    app.kubernetes.io/instance: policy-reporter
+    app.kubernetes.io/version: "2.14.2"
+    app.kubernetes.io/component: reporting
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: policy-reporter
+    app.kubernetes.io/instance: policy-reporter

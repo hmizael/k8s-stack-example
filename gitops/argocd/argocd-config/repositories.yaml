@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: repositories-argocd
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: argocd-config
+  source:
+    repoURL: https://github.com/hmizael/k8s-stack-example.git
+    targetRevision: main
+    path: gitops/argocd/argocd-config/repositories
+    directory:
+      recurse: false
+      include: '*.yaml'
+  destination:
+    name: in-cluster
+    namespace: argocd
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true

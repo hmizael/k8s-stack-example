@@ -1,0 +1,34 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config
+  namespace: beats
+  labels:
+    k8s-app: filebeat
+data:
+  filebeat.yml: |-
+    logging.metrics.enabled: false
+    filebeat.autodiscover:
+      providers:
+        - type: kubernetes
+          node: ${NODE_NAME}
+          hints.enabled: true
+          hints.default_config:
+            type: container
+            paths:
+              - /var/log/containers/*${data.kubernetes.container.id}.log
+
+    fields_under_root: true
+
+    fields:
+      project: k8s-stack-example
+      cluster: aks-target
+
+    processors:
+      - drop_fields:
+          fields: ["ecs", "kubernetes.namespace_labels", "kubernetes.node", "kubernetes.namespace_uid", "host.name", "agent", "input", "kubernetes.pod.ip", "kubernetes.pod.uid", "log.file.path", "log.offset", "tags", "stream", "container.id"]
+          ignore_missing: true
+
+    output.logstash:
+      hosts: ["logstash.trimtech.com.br:5044"]

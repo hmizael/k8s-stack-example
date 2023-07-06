@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: apps-target
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: AppProject utilizado para os armazenar os apps dos projetos de produtos com base Magento.
+  sourceRepos:
+    - 'https://github.com/hmizael/k8s-stack-example.git'
+  destinations:
+    - name: 'aks-target'
+      namespace: '*'
+      server: 'https://akstarget-fw3z7i5p.hcp.eastus.azmk8s.io:443'
+    - name: 'in-cluster'
+      namespace: 'argocd'
+      server: 'https://kubernetes.default.svc'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

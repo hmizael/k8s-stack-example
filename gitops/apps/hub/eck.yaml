@@ -1,0 +1,30 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eck-apps-hub
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: apps-hub
+  source:
+    repoURL: https://github.com/hmizael/k8s-stack-example.git
+    targetRevision: main
+    path: gitops/apps/hub/eck
+    directory:
+      recurse: false
+      include: '*.yaml'
+  destination:
+    name: in-cluster
+    namespace: elastic-system
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: elastic-webhook.k8s.elastic.co
+      jqPathExpressions:
+      - .webhooks[].clientConfig.caBundle

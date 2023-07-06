@@ -1,0 +1,18 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: internal-ingress-nginx-controller
+  namespace: ingress-nginx-internal
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: internal
+    app.kubernetes.io/version: 1.7.1
+    app.kubernetes.io/component: controller
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/instance: internal
+      app.kubernetes.io/component: controller
+  minAvailable: 1
